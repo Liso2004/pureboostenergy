@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const productController = require("../controllers/productController");
-
+const { searchProducts } = require("../controllers/productController");
 const authenticateToken = require("../middleware/authMiddleware");
 
 // Admin-only middleware
@@ -15,6 +15,7 @@ if (!req.user || req.user.role.toLowerCase() !== 'admin') {
 // 🔓 Public routes (anyone can view)
 router.get("/", productController.getAllProducts);
 router.get("/:id", productController.getProductById);
+router.get("/search", searchProducts);
 
 // 🔒 Admin-only routes
 router.post("/", authenticateToken, authorizeAdmin, productController.addProduct);

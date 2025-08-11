@@ -5,39 +5,68 @@ exports.placeOrder = async (req, res) => {
   const { user_id } = req.body;
 
   try {
-    // 1. Get user's cart id and cart items with product prices
-    const [[cart]] = await db.query("SELECT cart_id FROM Cart WHERE user_id = ?", [user_id]);
+    // 1. Get user's cart id
+    const [[cart]] = await db.query(
+      "SELECT cart_id FROM Cart WHERE user_id = ?",
+      [user_id]
+    );
     if (!cart) return res.status(404).json({ message: "Cart not found" });
 
+    // 2. Get cart items with price and stock
     const [cartItems] = await db.query(
-      `SELECT ci.product_id, ci.quantity, p.price
+      `SELECT ci.product_id, ci.quantity, p.price, p.stock_quantity
        FROM CartItems ci
        JOIN Products p ON ci.product_id = p.product_id
        WHERE ci.cart_id = ?`,
       [cart.cart_id]
     );
 
-    if (cartItems.length === 0) return res.status(400).json({ message: "Cart is empty" });
+    if (cartItems.length === 0)
+      return res.status(400).json({ message: "Cart is empty" });
 
-    // 2. Calculate total amount
-    const totalAmount = cartItems.reduce((acc, item) => acc + item.quantity * item.price, 0);
+    // 3. Check stock availability
+    for (let item of cartItems) {
+      if (item.quantity > item.stock_quantity) {
+        return res.status(400).json({
+          message: `Not enough stock for product ID ${item.product_id}`,
+        });
+      }
+    }
 
-    // 3. Insert into Orders table
+    // 4. Calculate total amount
+    const totalAmount = cartItems.reduce(
+      (acc, item) => acc + item.quantity * item.price,
+      0
+    );
+
+    // 5. Insert into Orders table
     const [orderResult] = await db.query(
       "INSERT INTO Orders (user_id, total_amount) VALUES (?, ?)",
       [user_id, totalAmount]
     );
-
     const orderId = orderResult.insertId;
 
-    // 4. Insert into OrderItems table
-    const orderItemsData = cartItems.map(item => [orderId, item.product_id, item.quantity, item.price]);
+    // 6. Insert into OrderItems table
+    const orderItemsData = cartItems.map((item) => [
+      orderId,
+      item.product_id,
+      item.quantity,
+      item.price,
+    ]);
     await db.query(
       "INSERT INTO OrderItems (order_id, product_id, quantity, price) VALUES ?",
       [orderItemsData]
     );
 
-    // 5. Clear user's cart and cart items
+    // 7. Update stock quantities
+    for (let item of cartItems) {
+      await db.query(
+        "UPDATE Products SET stock_quantity = stock_quantity - ? WHERE product_id = ?",
+        [item.quantity, item.product_id]
+      );
+    }
+
+    // 8. Clear user's cart
     await db.query("DELETE FROM CartItems WHERE cart_id = ?", [cart.cart_id]);
     await db.query("DELETE FROM Cart WHERE cart_id = ?", [cart.cart_id]);
 
@@ -48,20 +77,29 @@ exports.placeOrder = async (req, res) => {
   }
 };
 
-// Get all orders for a user
+
+// Get orders by user OR all orders (admin)
 exports.getOrdersByUser = async (req, res) => {
-  const { user_id } = req.params;
-
   try {
-    const [orders] = await db.query(
-      "SELECT * FROM Orders WHERE user_id = ? ORDER BY order_date DESC",
-      [user_id]
-    );
+    const { user_id } = req.params;
+    const role = req.user.role; // assuming verifyToken middleware attaches this
 
-    res.status(200).json(orders);
+    let query, params;
+
+    if (role === "admin") {
+      query = `SELECT * FROM Orders ORDER BY created_at DESC`;
+      params = [];
+    } else {
+      query = `SELECT * FROM Orders WHERE user_id = ? ORDER BY created_at DESC`;
+      params = [user_id];
+    }
+
+    const [orders] = await db.query(query, params);
+
+    res.json({ success: true, orders });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to get orders" });
+    console.error("Error fetching orders:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
