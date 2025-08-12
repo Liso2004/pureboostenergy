@@ -87,17 +87,19 @@ exports.deleteProduct = async (req, res) => {
     res.status(500).json({ message: "Error deleting product" });
   }
 };
-
 exports.searchProducts = async (req, res) => {
   try {
     const { q, minPrice, maxPrice, category, inStock } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
 
     let sql = "SELECT * FROM Products WHERE 1=1";
     let params = [];
 
     if (q && q.trim() !== "") {
-      sql += " AND (product_name LIKE ? OR description LIKE ?)";
-      params.push(`%${q}%`, `%${q}%`);
+      sql += " AND (LOWER(product_name) LIKE ? OR LOWER(description) LIKE ?)";
+      params.push(`%${q.toLowerCase()}%`, `%${q.toLowerCase()}%`);
     }
 
     if (minPrice && !isNaN(minPrice)) {
@@ -112,17 +114,60 @@ exports.searchProducts = async (req, res) => {
 
     if (category && category.trim() !== "") {
       sql += " AND category LIKE ?";
-      params.push(category);
+      params.push(`%${category}%`);
     }
 
     if (inStock === "true") {
       sql += " AND stock_quantity > 0";
     }
 
+    sql += " LIMIT ? OFFSET ?";
+    params.push(limit, offset);
+
+    console.log("SQL:", sql);
+    console.log("Params:", params);
+
     const [results] = await db.query(sql, params);
-    res.json(results);
+
+    // Optionally get total count for pagination info
+    let countSql = "SELECT COUNT(*) as total FROM Products WHERE 1=1";
+    let countParams = [];
+
+    if (q && q.trim() !== "") {
+      countSql += " AND (LOWER(product_name) LIKE ? OR LOWER(description) LIKE ?)";
+      countParams.push(`%${q.toLowerCase()}%`, `%${q.toLowerCase()}%`);
+    }
+
+    if (minPrice && !isNaN(minPrice)) {
+      countSql += " AND price >= ?";
+      countParams.push(Number(minPrice));
+    }
+
+    if (maxPrice && !isNaN(maxPrice)) {
+      countSql += " AND price <= ?";
+      countParams.push(Number(maxPrice));
+    }
+
+    if (category && category.trim() !== "") {
+      countSql += " AND category LIKE ?";
+      countParams.push(`%${category}%`);
+    }
+
+    if (inStock === "true") {
+      countSql += " AND stock_quantity > 0";
+    }
+
+    const [[{ total }]] = await db.query(countSql, countParams);
+
+    res.json({
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      results,
+    });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Database error", error: err });
+    res.status(500).json({ message: "Database error", error: err.message });
   }
 };

@@ -1,5 +1,48 @@
 const db = require("../config/db");
 
+// Add this new controller function for payment processing:
+// controllers/orderController.js
+exports.processPayment = async (req, res) => {
+  try {
+    const { cartItems, paymentDetails, guestInfo, userId } = req.body;
+
+    // Validate cart and payment details (basic check)
+    if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
+      return res.status(400).json({ error: "Cart is empty or invalid" });
+    }
+    if (!paymentDetails || !paymentDetails.method) {
+      return res.status(400).json({ error: "Payment details missing" });
+    }
+
+    // Here, integrate with real payment gateway (Stripe, PayPal, etc.)
+    // For now, simulate a successful payment:
+    const paymentSuccess = true;
+
+    if (!paymentSuccess) {
+      return res.status(402).json({ error: "Payment failed" });
+    }
+
+    // Save order to DB (simplified here, replace with real DB code)
+    const order = {
+      userId: userId || null,
+      guestEmail: guestInfo?.email || null,
+      items: cartItems,
+      amount: cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+      paymentMethod: paymentDetails.method,
+      status: "paid",
+      createdAt: new Date(),
+    };
+
+    // TODO: Save 'order' in your database, get order ID, etc.
+
+    return res.json({ message: "Payment processed and order created", order });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Server error during payment processing" });
+  }
+};
+
+
 // Place an order (checkout)
 exports.placeOrder = async (req, res) => {
   const { user_id } = req.body;

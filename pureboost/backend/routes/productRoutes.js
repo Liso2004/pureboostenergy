@@ -13,9 +13,9 @@ if (!req.user || req.user.role.toLowerCase() !== 'admin') {
 };
 
 // 🔓 Public routes (anyone can view)
+router.get("/search", searchProducts);
 router.get("/", productController.getAllProducts);
 router.get("/:id", productController.getProductById);
-router.get("/search", searchProducts);
 
 // 🔒 Admin-only routes
 router.post("/", authenticateToken, authorizeAdmin, productController.addProduct);
