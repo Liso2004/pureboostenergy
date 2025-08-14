@@ -156,3 +156,92 @@ exports.deleteCartItem = async (req, res) => {
     res.status(500).json({ message: "Error deleting cart item" });
   }
 };
+
+exports.addToGuestCart = async (req, res) => {
+  const { cartId, product_id, quantity } = req.body;
+
+  try {
+    let cart_id = cartId;
+
+    // If no cartId provided, create a new guest cart
+    if (!cart_id) {
+      const [insertResult] = await db.query(
+        "INSERT INTO Cart (user_id, total_amount) VALUES (?, ?)",
+        [null, 0]
+      );
+      cart_id = insertResult.insertId;
+    }
+
+    // Check if product exists
+    const [productRows] = await db.query(
+      "SELECT price FROM Products WHERE product_id = ?",
+      [product_id]
+    );
+    if (!productRows.length) return res.status(404).json({ message: "Product not found" });
+
+    const price = productRows[0].price;
+
+    // Check if product already in cart
+    const [existingItem] = await db.query(
+      "SELECT * FROM CartItems WHERE cart_id = ? AND product_id = ?",
+      [cart_id, product_id]
+    );
+
+    if (existingItem.length > 0) {
+      // Update quantity
+      const newQuantity = existingItem[0].quantity + quantity;
+      await db.query(
+        "UPDATE CartItems SET quantity = ? WHERE cart_item_id = ?",
+        [newQuantity, existingItem[0].cart_item_id]
+      );
+    } else {
+      // Insert new item
+      await db.query(
+        "INSERT INTO CartItems (cart_id, product_id, quantity) VALUES (?, ?, ?)",
+        [cart_id, product_id, quantity]
+      );
+    }
+
+    // Update total_amount in Cart
+    const [totalRows] = await db.query(
+      `SELECT SUM(CartItems.quantity * Products.price) AS total
+       FROM CartItems
+       JOIN Products ON CartItems.product_id = Products.product_id
+       WHERE cart_id = ?`,
+      [cart_id]
+    );
+    const updatedTotal = totalRows[0].total || 0;
+    await db.query("UPDATE Cart SET total_amount = ? WHERE cart_id = ?", [updatedTotal, cart_id]);
+
+    res.status(201).json({ message: "Item added to guest cart", cartId: cart_id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error adding to guest cart" });
+  }
+};
+
+// Get guest cart
+exports.getGuestCart = async (req, res) => {
+  const cart_id = req.params.cartId;
+
+  try {
+    const [items] = await db.query(
+      `SELECT CartItems.cart_item_id, CartItems.quantity, Products.*, (CartItems.quantity * Products.price) AS item_total
+       FROM CartItems
+       JOIN Products ON CartItems.product_id = Products.product_id
+       WHERE CartItems.cart_id = ?`,
+      [cart_id]
+    );
+
+    if (!items.length) return res.status(404).json({ message: "Cart not found" });
+
+    // Fetch total_amount from Cart
+    const [cartRows] = await db.query("SELECT * FROM Cart WHERE cart_id = ?", [cart_id]);
+    const cart = cartRows[0];
+
+    res.json({ cart, items });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error fetching guest cart" });
+  }
+};
