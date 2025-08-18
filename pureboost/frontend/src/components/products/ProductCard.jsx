@@ -1,7 +1,10 @@
-import React from 'react';
-import { Heart, Star } from 'lucide-react';
+import React from "react";
+import { Heart, Star } from "lucide-react";
+import { useWishlist } from "../../context/WishlistContext";
 
 const ProductCard = ({ product, onAddToCart }) => {
+  const { addToWishlist } = useWishlist();
+
   return (
     <div className="bg-white rounded-lg shadow-sm hover:shadow-lg transition-all transform hover:scale-105 border border-gray-200">
       <div className="relative overflow-hidden rounded-t-lg">
@@ -10,11 +13,13 @@ const ProductCard = ({ product, onAddToCart }) => {
           alt={product.name}
           className="w-full h-48 object-cover"
         />
-        <button className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition-colors">
+        <button
+          onClick={() => addToWishlist(product)}
+          className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition-colors"
+        >
           <Heart className="h-4 w-4 text-gray-600" />
         </button>
       </div>
-      
       <div className="p-4">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs bg-gray-200 text-gray-800 px-2 py-1 rounded-full">
