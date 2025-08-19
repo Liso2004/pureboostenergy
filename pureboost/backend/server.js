@@ -8,6 +8,8 @@ const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes")
 const cartRoutes = require("./routes/cartRoutes")
 const orderRoutes = require("./routes/orderRoutes");
+const profileRoutes = require('./routes/profileRoutes');
+
 
 
 dotenv.config();
@@ -27,6 +29,7 @@ app.use("/auth", authRoutes);
 app.use("/products",productRoutes);
 app.use("/cart",cartRoutes);
 app.use("/orders", orderRoutes);
+app.use('/profile', profileRoutes);
 
 
 // Set dynamic cookie

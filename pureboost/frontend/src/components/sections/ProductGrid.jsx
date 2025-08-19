@@ -3,16 +3,21 @@ import ProductCard from '../products/ProductCard';
 
 const ProductGrid = ({ products, categoryName, onAddToCart }) => {
   return (
-    <section className="py-12 bg-gray-50">
+    <section id="product-grid" className="py-16 bg-white">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-black mb-2">
+        {/* Section Header */}
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-extrabold text-black mb-3 tracking-tight">
             {categoryName}
           </h2>
-          <p className="text-gray-600">Premium quality products for peak performance</p>
+          <p className="text-gray-500 text-lg">
+            Premium quality products for peak performance
+          </p>
+          <div className="mt-2 h-1 w-20 bg-black mx-auto rounded"></div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {/* Product Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {products.map((product) => (
             <ProductCard 
               key={product.id} 

@@ -7,6 +7,7 @@ import CheckoutPage from './pages/CheckoutPage';
 import OrderConfirmation from './components/checkout/OrderConfirmation';
 import Login from './pages/Loginpage';
 import WishlistPage from "./pages/WishlistPage";
+import ProfilePage from "./pages/profilepage"; // <-- import profile page
 import { productData, categories } from './data/products';
 
 const App = () => {
@@ -16,12 +17,12 @@ const App = () => {
   const [userId, setUserId] = useState(null);
   const [orderDetails, setOrderDetails] = useState(null);
   const [guestCart, setGuestCart] = useState([]);
-  const [wishlist, setWishlist] = useState([]); // ✅ wishlist state
+  const [wishlist, setWishlist] = useState([]);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
 
-  // ✅ CART
+  // Add to cart
   const addToCart = (product) => {
     setCartItemsCount(prev => prev + 1);
     setGuestCart(prev => {
@@ -37,14 +38,14 @@ const App = () => {
     setShowConfirm(true);
   };
 
-  // ✅ WISHLIST
+  // Toggle wishlist
   const toggleWishlist = (product) => {
     setWishlist(prev => {
       const exists = prev.find(item => item.id === product.id);
       if (exists) {
-        return prev.filter(item => item.id !== product.id); // remove if already in wishlist
+        return prev.filter(item => item.id !== product.id);
       }
-      return [...prev, product]; // add if not
+      return [...prev, product];
     });
   };
 
@@ -59,18 +60,19 @@ const App = () => {
 
   const currentCategoryName = categories.find(cat => cat.id === activeCategory)?.name;
 
-  const showHeader = location.pathname !== '/login';
+  // Conditional rendering for header and footer
+  const showHeaderFooter = location.pathname !== '/login';
 
   return (
     <div className="min-h-screen bg-white">
-      {showHeader && (
+      {showHeaderFooter && (
         <Header
           cartItemsCount={cartItemsCount}
           onCartClick={() => setShowCheckout(!showCheckout)}
           loggedIn={loggedIn}
           activeCategory={activeCategory}
           setActiveCategory={setActiveCategory}
-          wishlistCount={wishlist.length} // ✅ show wishlist count in header
+          wishlistCount={wishlist.length}
         />
       )}
 
@@ -83,8 +85,8 @@ const App = () => {
                 products={productData}
                 activeCategory={activeCategory}
                 onAddToCart={addToCart}
-                onToggleWishlist={toggleWishlist} // ✅ pass wishlist function
-                wishlist={wishlist} // ✅ pass wishlist state
+                onToggleWishlist={toggleWishlist}
+                wishlist={wishlist}
                 categoryName={currentCategoryName}
               />
             ) : (
@@ -99,13 +101,11 @@ const App = () => {
           }
         />
         <Route path="/login" element={<Login />} />
-
-        <Route
-        path="/wishlist" element={<WishlistPage />}
-        /> {/* ✅ wishlist page */}
+        <Route path="/wishlist" element={<WishlistPage />} />
+        <Route path="/account" element={<ProfilePage />} /> {/* <-- added profile route */}
       </Routes>
 
-      <Footer />
+      {showHeaderFooter && <Footer />}
 
       <OrderConfirmation
         orderDetails={orderDetails}
