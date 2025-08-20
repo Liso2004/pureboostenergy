@@ -1,14 +1,14 @@
-import React from 'react';
-import ProductCard from '../products/ProductCard';
+import React from "react";
+import ProductCard from "../products/ProductCard";
 
-const ProductGrid = ({ products, categoryName, onAddToCart }) => {
+const ProductGrid = ({ products = [], categoryName, onAddToCart }) => {
   return (
     <section id="product-grid" className="py-16 bg-white">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-12">
           <h2 className="text-4xl font-extrabold text-black mb-3 tracking-tight">
-            {categoryName}
+            {categoryName || "Products"}
           </h2>
           <p className="text-gray-500 text-lg">
             Premium quality products for peak performance
@@ -18,13 +18,27 @@ const ProductGrid = ({ products, categoryName, onAddToCart }) => {
 
         {/* Product Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {products.map((product) => (
-            <ProductCard 
-              key={product.id} 
-              product={product} 
-              onAddToCart={onAddToCart} 
-            />
-          ))}
+          {products.length > 0 ? (
+            products.map((product) => (
+              <ProductCard
+                key={product.product_id || product.id}
+                product={{
+                  id: product.product_id || product.id,
+                  name: product.name || product.product_name,
+                  description: product.description,
+                  price: product.price,
+                  category: product.category,
+                  image: product.image,
+                  rating: product.rating
+                }}
+                onAddToCart={onAddToCart}
+              />
+            ))
+          ) : (
+            <p className="text-center col-span-full text-gray-500">
+              No products found.
+            </p>
+          )}
         </div>
       </div>
     </section>

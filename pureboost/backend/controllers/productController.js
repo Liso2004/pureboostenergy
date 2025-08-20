@@ -87,6 +87,7 @@ exports.deleteProduct = async (req, res) => {
     res.status(500).json({ message: "Error deleting product" });
   }
 };
+
 exports.searchProducts = async (req, res) => {
   try {
     const { q, minPrice, maxPrice, category, inStock } = req.query;
