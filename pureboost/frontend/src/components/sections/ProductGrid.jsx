@@ -19,25 +19,28 @@ const ProductGrid = ({ products = [], categoryName, onAddToCart }) => {
         {/* Product Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {products.length > 0 ? (
-            products.map((product) => (
-              <ProductCard
-                key={product.product_id || product.id}
-                product={{
-                  id: product.product_id || product.id,
-                  name: product.name || product.product_name,
-                  description: product.description,
-                  price: product.price,
-                  category: product.category,
-                  image: product.image,
-                  rating: product.rating
-                }}
-                onAddToCart={onAddToCart}
-              />
-            ))
+            products.map((product) => {
+              const mappedProduct = {
+                id: product.product_id || product.id,
+                product_name: product.product_name || product.name,
+                description: product.description,
+                price: product.price,
+                category: product.category,
+                image_url: product.image_url || product.image || "https://via.placeholder.com/400",
+                rating: product.rating || 4.5,
+                stock_quantity: product.stock_quantity || 0,
+              };
+
+              return (
+                <ProductCard
+                  key={mappedProduct.id}
+                  product={mappedProduct}
+                  onAddToCart={onAddToCart}
+                />
+              );
+            })
           ) : (
-            <p className="text-center col-span-full text-gray-500">
-              No products found.
-            </p>
+            <p className="text-center col-span-full text-gray-500">No products found.</p>
           )}
         </div>
       </div>

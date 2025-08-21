@@ -88,87 +88,60 @@ exports.deleteProduct = async (req, res) => {
   }
 };
 
+// Global / category-based search
 exports.searchProducts = async (req, res) => {
   try {
-    const { q, minPrice, maxPrice, category, inStock } = req.query;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const { q = "", category = "", page = 1, limit = 10 } = req.query;
     const offset = (page - 1) * limit;
 
+    // Prepare search query
     let sql = "SELECT * FROM Products WHERE 1=1";
-    let params = [];
+    const params = [];
 
-    if (q && q.trim() !== "") {
+    if (q.trim()) {
       sql += " AND (LOWER(product_name) LIKE ? OR LOWER(description) LIKE ?)";
-      params.push(`%${q.toLowerCase()}%`, `%${q.toLowerCase()}%`);
+      const searchTerm = `%${q.toLowerCase()}%`;
+      params.push(searchTerm, searchTerm);
     }
 
-    if (minPrice && !isNaN(minPrice)) {
-      sql += " AND price >= ?";
-      params.push(Number(minPrice));
-    }
-
-    if (maxPrice && !isNaN(maxPrice)) {
-      sql += " AND price <= ?";
-      params.push(Number(maxPrice));
-    }
-
-    if (category && category.trim() !== "") {
-      sql += " AND category LIKE ?";
-      params.push(`%${category}%`);
-    }
-
-    if (inStock === "true") {
-      sql += " AND stock_quantity > 0";
+    if (category.trim()) {
+      sql += " AND LOWER(category) LIKE ?";
+      params.push(`%${category.toLowerCase()}%`);
     }
 
     sql += " LIMIT ? OFFSET ?";
-    params.push(limit, offset);
-
-    console.log("SQL:", sql);
-    console.log("Params:", params);
+    params.push(parseInt(limit), parseInt(offset));
 
     const [results] = await db.query(sql, params);
 
-    // Optionally get total count for pagination info
+    // Get total count for pagination
     let countSql = "SELECT COUNT(*) as total FROM Products WHERE 1=1";
-    let countParams = [];
+    const countParams = [];
 
-    if (q && q.trim() !== "") {
+    if (q.trim()) {
       countSql += " AND (LOWER(product_name) LIKE ? OR LOWER(description) LIKE ?)";
-      countParams.push(`%${q.toLowerCase()}%`, `%${q.toLowerCase()}%`);
+      const searchTerm = `%${q.toLowerCase()}%`;
+      countParams.push(searchTerm, searchTerm);
     }
 
-    if (minPrice && !isNaN(minPrice)) {
-      countSql += " AND price >= ?";
-      countParams.push(Number(minPrice));
+    if (category.trim()) {
+      countSql += " AND LOWER(category) LIKE ?";
+      countParams.push(`%${category.toLowerCase()}%`);
     }
 
-    if (maxPrice && !isNaN(maxPrice)) {
-      countSql += " AND price <= ?";
-      countParams.push(Number(maxPrice));
-    }
-
-    if (category && category.trim() !== "") {
-      countSql += " AND category LIKE ?";
-      countParams.push(`%${category}%`);
-    }
-
-    if (inStock === "true") {
-      countSql += " AND stock_quantity > 0";
-    }
-
-    const [[{ total }]] = await db.query(countSql, countParams);
+    const [countResult] = await db.query(countSql, countParams);
+    const total = countResult[0].total;
+    const totalPages = Math.ceil(total / limit);
 
     res.json({
-      page,
-      limit,
+      page: parseInt(page),
+      limit: parseInt(limit),
       total,
-      totalPages: Math.ceil(total / limit),
+      totalPages,
       results,
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Database error", error: err.message });
+    console.error("SearchProducts error:", err);
+    res.status(500).json({ message: "Server error while searching products." });
   }
 };

@@ -27,7 +27,6 @@ app.use(cookieParser()); // enable cookie parsing
 //Routes
 app.use("/auth", authRoutes);
 app.use("/api/products", productRoutes);
-app.use("/products",productRoutes);
 app.use("/cart",cartRoutes);
 app.use("/orders", orderRoutes);
 app.use('/profile', profileRoutes);

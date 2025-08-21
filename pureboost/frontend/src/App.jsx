@@ -1,3 +1,4 @@
+// App.jsx
 import React, { useState, useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -10,11 +11,12 @@ import OrderConfirmation from "./components/checkout/OrderConfirmation";
 import Login from "./pages/Loginpage";
 import ProfilePage from "./pages/profilepage";
 import WishlistPage from "./pages/WishlistPage";
+import ProductDetails from "./pages/ProductDetails"; // <-- Product Details
 
 import { WishlistProvider } from "./context/WishlistContext";
 
-// ✅ Centralized API base URL
-const API_BASE = "http://localhost:5000/products"; // points directly to products route
+// Centralized API base URL
+const API_BASE = "http://localhost:5000/api/products";
 
 const App = () => {
   const location = useLocation();
@@ -30,14 +32,14 @@ const App = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
 
-  // ✅ Categories
+  // Categories
   const categories = [
     { id: "drinks", name: "Drinks" },
     { id: "equipment", name: "Equipment" },
     { id: "sportswear", name: "Sportswear" },
   ];
 
-  // ✅ Fetch products whenever category changes
+  // Fetch products whenever category changes
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
@@ -45,14 +47,8 @@ const App = () => {
 
       try {
         const res = await axios.get(API_BASE, {
-          params: {
-            page: 1,
-            limit: 20,
-            category: activeCategory,
-          },
+          params: { page: 1, limit: 20, category: activeCategory },
         });
-
-        console.log("Backend response:", res.data);
 
         const mappedProducts = res.data.products.map((p) => ({
           id: p.product_id,
@@ -67,9 +63,9 @@ const App = () => {
 
         setProducts(mappedProducts);
       } catch (err) {
-        console.error("❌ Error fetching products:", err);
+        console.error("Error fetching products:", err);
         setError("Failed to load products. Please try again.");
-        setProducts([]); // reset products on error
+        setProducts([]);
       } finally {
         setLoading(false);
       }
@@ -78,7 +74,7 @@ const App = () => {
     fetchProducts();
   }, [activeCategory]);
 
-  // ✅ Add to cart
+  // Add to cart
   const addToCart = (product) => {
     setCartItemsCount((prev) => prev + 1);
     setGuestCart((prev) => {
@@ -100,7 +96,7 @@ const App = () => {
   const handlePaymentSuccess = (order) => {
     setOrderDetails(order);
     setShowConfirm(true);
-    setGuestCart([]); // clear cart after successful checkout
+    setGuestCart([]);
     setCartItemsCount(0);
   };
 
@@ -148,6 +144,13 @@ const App = () => {
               )
             }
           />
+
+          {/* Product Details Route */}
+          <Route
+            path="/product/:id"
+            element={<ProductDetails onAddToCart={addToCart} />}
+          />
+
           <Route
             path="/login"
             element={<Login onLoginSuccess={handleLoginSuccess} />}
