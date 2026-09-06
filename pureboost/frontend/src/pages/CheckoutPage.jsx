@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CreditCard, User, Mail, Phone, MapPin } from "lucide-react";
 import { Button } from "../components/ui/button";
+import api from "../services/api";
 
 const Checkout = ({ cartItems = [], onBackToShopping, onPaymentSuccess }) => {
   const [guestInfo, setGuestInfo] = useState({
@@ -13,12 +14,9 @@ const Checkout = ({ cartItems = [], onBackToShopping, onPaymentSuccess }) => {
     zipCode: "",
   });
 
-  const [paymentData, setPaymentData] = useState({
-    cardNumber: "",
-    expiryDate: "",
-    cvv: "",
-    cardholderName: "",
-  });
+  const [paymentMethod, setPaymentMethod] = useState("card");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const total = (cartItems || []).reduce(
     (sum, item) => sum + (item.price || 0) * (item.quantity || 0),
@@ -28,20 +26,26 @@ const Checkout = ({ cartItems = [], onBackToShopping, onPaymentSuccess }) => {
   const formatZAR = (amount) =>
     new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR" }).format(amount);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setSubmitting(true);
 
-    const mockOrder = {
-      orderId: "ORD-" + Date.now(),
-      items: cartItems,
-      total,
-      status: "confirmed",
-      timestamp: new Date().toISOString(),
-      customerInfo: guestInfo,
-    };
+    try {
+      const response = await api.post("/checkout", {
+        payment_method: paymentMethod,
+      });
 
-    if (typeof onPaymentSuccess === "function") {
-      onPaymentSuccess(mockOrder);
+      if (typeof onPaymentSuccess === "function") {
+        onPaymentSuccess(response.data);
+      }
+    } catch (requestError) {
+      setError(
+        requestError.response?.data?.message ||
+          "Checkout failed. Please try again."
+      );
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -195,58 +199,27 @@ const Checkout = ({ cartItems = [], onBackToShopping, onPaymentSuccess }) => {
                 <CreditCard className="mr-2 h-5 w-5" />
                 Payment Information
               </h3>
+              {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">Card Number</label>
-                  <input
-                    type="text"
-                    placeholder="1234 5678 9012 3456"
-                    value={paymentData.cardNumber}
-                    onChange={(e) => setPaymentData({ ...paymentData, cardNumber: e.target.value })}
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">Payment Method</label>
+                  <select
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
                     className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground"
                     required
-                  />
+                  >
+                    <option value="card">Card provider</option>
+                    <option value="cash_on_delivery">Cash on delivery</option>
+                  </select>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1">Expiry Date</label>
-                    <input
-                      type="text"
-                      placeholder="MM/YY"
-                      value={paymentData.expiryDate}
-                      onChange={(e) => setPaymentData({ ...paymentData, expiryDate: e.target.value })}
-                      className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1">CVV</label>
-                    <input
-                      type="text"
-                      placeholder="123"
-                      value={paymentData.cvv}
-                      onChange={(e) => setPaymentData({ ...paymentData, cvv: e.target.value })}
-                      className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground"
-                      required
-                    />
-                  </div>
-                </div>
+                <p className="text-sm text-muted-foreground">
+                  Card details will be collected by the payment provider when it is connected.
+                </p>
 
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">Cardholder Name</label>
-                  <input
-                    type="text"
-                    placeholder="John Doe"
-                    value={paymentData.cardholderName}
-                    onChange={(e) => setPaymentData({ ...paymentData, cardholderName: e.target.value })}
-                    className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground"
-                    required
-                  />
-                </div>
-
-                <Button type="submit" className="w-full" size="lg">
-                  Complete Payment - {formatZAR(total)}
+                <Button type="submit" className="w-full" size="lg" disabled={submitting || cartItems.length === 0}>
+                  {submitting ? "Placing Order..." : `Place Order - ${formatZAR(total)}`}
                 </Button>
               </form>
             </div>

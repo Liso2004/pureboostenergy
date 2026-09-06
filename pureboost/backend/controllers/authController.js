@@ -54,7 +54,8 @@ exports.loginUser = async (req, res) => {
   { expiresIn: "1d" }
 );
 
-    res.status(200).json({ message: "Login successful", token, user });
+    const { password: _password, ...safeUser } = user;
+    res.status(200).json({ message: "Login successful", token, user: safeUser });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Login failed" });

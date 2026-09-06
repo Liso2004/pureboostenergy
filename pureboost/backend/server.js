@@ -2,6 +2,7 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const path = require("path");
 const cookieParser = require ("cookie-parser")//for cookies 
 
 const authRoutes = require("./routes/authRoutes");
@@ -9,15 +10,28 @@ const productRoutes = require("./routes/productRoutes")
 const cartRoutes = require("./routes/cartRoutes")
 const orderRoutes = require("./routes/orderRoutes");
 const profileRoutes = require('./routes/profileRoutes');
+const checkoutRoutes = require('./routes/checkoutRoutes');
 
 
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 const app = express();
 
 //Middleware must come BEFORE your routes
 app.use(cors({
-  origin: "http://localhost:3000", // CRA default port
+  origin: (origin, callback) => {
+    const configuredOrigin = process.env.CORS_ORIGIN || "http://localhost:3000";
+    const isLocalDevelopmentOrigin =
+      process.env.NODE_ENV !== "production" &&
+      origin &&
+      /^http:\/\/localhost:\d+$/.test(origin);
+
+    if (!origin || origin === configuredOrigin || isLocalDevelopmentOrigin) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("Origin not allowed by CORS"));
+  },
   credentials: true
 }));
 
@@ -30,6 +44,7 @@ app.use("/api/products", productRoutes);
 app.use("/cart",cartRoutes);
 app.use("/orders", orderRoutes);
 app.use('/profile', profileRoutes);
+app.use('/checkout', checkoutRoutes);
 
 
 // Set dynamic cookie

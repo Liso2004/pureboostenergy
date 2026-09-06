@@ -7,9 +7,24 @@ exports.getAllProducts = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
+    const category = String(req.query.category || '').toLowerCase();
+    const categoryGroups = {
+      drinks: ['Energy Drink', 'Sports Drink', 'Wellness Drink'],
+      equipment: ['Accessories', 'Training', 'Weights'],
+      sportswear: ['Tops', 'Bottoms', 'Outerwear'],
+    };
+    const categories = categoryGroups[category];
+    const categoryPlaceholders = categories?.map(() => '?').join(', ');
+    const whereClause = categories ? `WHERE category IN (${categoryPlaceholders})` : '';
 
-    const [products] = await db.query("SELECT * FROM Products LIMIT ? OFFSET ?", [limit, offset]);
-    const [[{ total }]] = await db.query("SELECT COUNT(*) as total FROM Products");
+    const [products] = await db.query(
+      `SELECT * FROM Products ${whereClause} ORDER BY product_id LIMIT ? OFFSET ?`,
+      [...(categories || []), limit, offset]
+    );
+    const [[{ total }]] = await db.query(
+      `SELECT COUNT(*) as total FROM Products ${whereClause}`,
+      categories || []
+    );
 
     res.status(200).json({
       page,

@@ -1,6 +1,7 @@
 // src/pages/WishlistPage.jsx
 import React from "react";
 import { useWishlist } from "../context/WishlistContext";
+import ProductImage from "../components/ui/ProductImage";
 
 const WishlistPage = () => {
   const { wishlist, removeFromWishlist } = useWishlist();
@@ -18,10 +19,10 @@ const WishlistPage = () => {
               key={product.id}
               className="bg-white rounded-lg shadow-md p-4 border border-gray-200"
             >
-              <img
+              <ProductImage
                 src={product.image}
                 alt={product.name}
-                className="w-full h-40 object-cover rounded"
+                className="w-full aspect-[4/3] object-cover rounded"
               />
               <h3 className="mt-3 font-semibold text-gray-900">
                 {product.name}

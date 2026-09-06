@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-labelledby="title desc">
+  <title id="title">PureBoost product placeholder</title>
+  <desc id="desc">A simple PureBoost Energy product placeholder graphic.</desc>
+  <rect width="800" height="600" fill="#101417"/>
+  <circle cx="400" cy="240" r="112" fill="#d8ff3e" opacity="0.92"/>
+  <path d="M430 118 350 260h64l-46 112 94-152h-65z" fill="#101417"/>
+  <text x="400" y="475" text-anchor="middle" fill="#f5f7f2" font-family="Arial, sans-serif" font-size="42" font-weight="700" letter-spacing="2">PUREBOOST</text>
+  <text x="400" y="515" text-anchor="middle" fill="#aab3ae" font-family="Arial, sans-serif" font-size="18" letter-spacing="5">ENERGY</text>
+</svg>

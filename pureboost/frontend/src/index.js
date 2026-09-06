@@ -4,15 +4,18 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { WishlistProvider } from './context/WishlistContext';
+import { AuthProvider } from './context/AuthContext';
 import { BrowserRouter } from 'react-router-dom';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <BrowserRouter>
-      <WishlistProvider> {/* ✅ Wrap App with WishlistProvider */}
-        <App />
-      </WishlistProvider>
+      <AuthProvider>
+        <WishlistProvider>
+          <App />
+        </WishlistProvider>
+      </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>
 );

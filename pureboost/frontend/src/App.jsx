@@ -1,7 +1,7 @@
 // App.jsx
 import React, { useState, useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
-import axios from "axios";
+import api from "./services/api";
 
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
@@ -13,10 +13,7 @@ import ProfilePage from "./pages/profilepage";
 import WishlistPage from "./pages/WishlistPage";
 import ProductDetails from "./pages/ProductDetails"; // <-- Product Details
 
-import { WishlistProvider } from "./context/WishlistContext";
-
-// Centralized API base URL
-const API_BASE = "http://localhost:5000/api/products";
+import ProtectedRoute from "./components/ProtectedRoutes";
 
 const App = () => {
   const location = useLocation();
@@ -25,7 +22,6 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [cartItemsCount, setCartItemsCount] = useState(0);
-  const [userId, setUserId] = useState(null);
   const [orderDetails, setOrderDetails] = useState(null);
   const [guestCart, setGuestCart] = useState([]);
   const [showCheckout, setShowCheckout] = useState(false);
@@ -46,7 +42,7 @@ const App = () => {
       setError("");
 
       try {
-        const res = await axios.get(API_BASE, {
+        const res = await api.get("/api/products", {
           params: { page: 1, limit: 20, category: activeCategory },
         });
 
@@ -56,7 +52,7 @@ const App = () => {
           description: p.description,
           price: p.price,
           category: p.category,
-          image: p.image || "https://via.placeholder.com/300",
+          image: p.image_url,
           rating: p.rating || 4.5,
           stock_quantity: p.stock_quantity,
         }));
@@ -89,8 +85,6 @@ const App = () => {
       return [...prev, { ...product, quantity: 1 }];
     });
 
-    setOrderDetails({ id: Math.floor(Math.random() * 100000) });
-    setShowConfirm(true);
   };
 
   const handlePaymentSuccess = (order) => {
@@ -108,8 +102,7 @@ const App = () => {
   const showHeaderFooter = location.pathname !== "/login";
 
   return (
-    <WishlistProvider>
-      <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white">
         {showHeaderFooter && (
           <Header
             cartItemsCount={cartItemsCount}
@@ -135,7 +128,6 @@ const App = () => {
                 />
               ) : (
                 <CheckoutPage
-                  userId={userId}
                   cartItems={guestCart}
                   onPaymentSuccess={handlePaymentSuccess}
                   orderDetails={orderDetails}
@@ -155,8 +147,8 @@ const App = () => {
             path="/login"
             element={<Login onLoginSuccess={handleLoginSuccess} />}
           />
-          <Route path="/account" element={<ProfilePage />} />
-          <Route path="/wishlist" element={<WishlistPage />} />
+          <Route path="/account" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="/wishlist" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
         </Routes>
 
         {showHeaderFooter && <Footer />}
@@ -166,8 +158,7 @@ const App = () => {
           show={showConfirm}
           onClose={() => setShowConfirm(false)}
         />
-      </div>
-    </WishlistProvider>
+    </div>
   );
 };
 

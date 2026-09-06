@@ -2,6 +2,7 @@ import React from "react";
 import { Heart, Star } from "lucide-react";
 import { useWishlist } from "../../context/WishlistContext";
 import { useNavigate } from "react-router-dom";
+import ProductImage from "../ui/ProductImage";
 
 const ProductCard = ({ product, onAddToCart }) => {
   const { wishlist, addToWishlist } = useWishlist();
@@ -16,10 +17,10 @@ const ProductCard = ({ product, onAddToCart }) => {
         className="relative overflow-hidden rounded-t-lg cursor-pointer"
         onClick={() => navigate(`/product/${product.id}`)}
       >
-        <img
-          src={product.image_url || "https://via.placeholder.com/400"}
+        <ProductImage
+          src={product.image_url}
           alt={product.product_name || product.name}
-          className="w-full h-48 object-cover rounded-lg shadow-lg"
+          className="w-full aspect-[4/3] object-cover rounded-lg shadow-lg"
         />
         <button
           onClick={(e) => {

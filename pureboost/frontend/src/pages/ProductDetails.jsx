@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
-
-const API_BASE = "http://localhost:5000/api/products";
+import api from "../services/api";
+import ProductImage from "../components/ui/ProductImage";
 
 const ProductDetails = ({ onAddToCart }) => {
   const { id } = useParams();
@@ -13,7 +12,7 @@ const ProductDetails = ({ onAddToCart }) => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(`${API_BASE}/${id}`);
+        const res = await api.get(`/api/products/${id}`);
         setProduct(res.data);
       } catch (err) {
         console.error(err);
@@ -34,10 +33,10 @@ const ProductDetails = ({ onAddToCart }) => {
       <div className="flex flex-col md:flex-row gap-8">
         {/* Product Image */}
         <div className="flex-1">
-          <img
-            src={product.image_url || "https://via.placeholder.com/400"}
+          <ProductImage
+            src={product.image_url}
             alt={product.product_name}
-            className="w-full h-auto rounded-lg shadow-lg"
+            className="w-full aspect-[4/3] object-cover rounded-lg shadow-lg"
           />
         </div>
 

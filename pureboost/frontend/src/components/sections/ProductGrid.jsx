@@ -26,7 +26,7 @@ const ProductGrid = ({ products = [], categoryName, onAddToCart }) => {
                 description: product.description,
                 price: product.price,
                 category: product.category,
-                image_url: product.image_url || product.image || "https://via.placeholder.com/400",
+                image_url: product.image_url || product.image,
                 rating: product.rating || 4.5,
                 stock_quantity: product.stock_quantity || 0,
               };

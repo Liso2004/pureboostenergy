@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ShoppingCart, User, Search, Heart, Zap, Star } from "lucide-react";
+import { ShoppingCart, Search, Heart, Zap, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "./Navigation";
-import axios from "axios";
-
-const API_BASE = "http://localhost:5000/api/products";
+import api from "../../services/api";
+import ProductImage from "../ui/ProductImage";
 
 const Header = ({ cartItemsCount, onCartClick, loggedIn, activeCategory, setActiveCategory }) => {
   const navigate = useNavigate();
@@ -24,7 +23,7 @@ const Header = ({ cartItemsCount, onCartClick, loggedIn, activeCategory, setActi
 
     const fetchResults = async () => {
       try {
-        const response = await axios.get(`${API_BASE}/search`, {
+        const response = await api.get("/api/products/search", {
           params: { q: query, category: "", page: 1, limit: 5 } // global search ignores category
         });
 
@@ -33,7 +32,7 @@ const Header = ({ cartItemsCount, onCartClick, loggedIn, activeCategory, setActi
           name: p.product_name,
           category: p.category,
           price: p.price,
-          image: p.image_url || "https://via.placeholder.com/50",
+          image: p.image_url,
           rating: p.rating || 4.5,
         }));
 
@@ -102,7 +101,7 @@ const Header = ({ cartItemsCount, onCartClick, loggedIn, activeCategory, setActi
                       }}
                     >
                       <div className="flex items-center space-x-2">
-                        <img src={product.image} alt={product.name} className="h-10 w-10 object-cover rounded" />
+                        <ProductImage src={product.image} alt={product.name} className="h-10 w-10 object-cover rounded" />
                         <div>
                           <span className="block font-medium text-white">{product.name}</span>
                           <span className="text-gray-400 text-xs">{product.category}</span>
@@ -137,9 +136,6 @@ const Header = ({ cartItemsCount, onCartClick, loggedIn, activeCategory, setActi
               )}
             </button>
 
-            <button className="relative hover:text-yellow-400 transition-colors" onClick={() => navigate("/account")}>
-              <User className="h-6 w-6" />
-            </button>
           </div>
         </div>
       </div>

@@ -7,8 +7,8 @@ const HomePage = ({ products, activeCategory, onAddToCart, categoryName }) => {
   // Map frontend categories to database categories
   const categoryMap = {
     drinks: ["Energy Drink", "Sports Drink", "Wellness Drink"],
-    equipment: ["Equipment"],
-    sportswear: ["Sportswear"]
+    equipment: ["Accessories", "Training", "Weights"],
+    sportswear: ["Tops", "Bottoms", "Outerwear"]
   };
 
   const filteredProducts = products.filter(

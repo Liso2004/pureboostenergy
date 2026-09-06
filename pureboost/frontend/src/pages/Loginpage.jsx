@@ -4,9 +4,11 @@ import { Button } from "../components/ui/button";
 import Input from "../components/ui/input";
 import Label from "../components/ui/label";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login, register } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -38,38 +40,21 @@ const Login = () => {
           return;
         }
 
-        const res = await fetch("http://localhost:5000/auth/register", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+        await register({
             name: formData.firstName,
             surname: formData.lastName,
             username: formData.username || formData.email.split("@")[0],
             email: formData.email,
             contact_number: formData.contact_number,
             password: formData.password,
-          }),
-        });
-
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Registration failed");
+          });
         alert("Account created! Please log in.");
         setIsSignUp(false);
       } else {
-        const res = await fetch("http://localhost:5000/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+        await login({
             email: formData.email,
             password: formData.password,
-          }),
-        });
-
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Login failed");
-
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
+          });
 
         navigate("/account"); // Navigate to account page after login
       }
@@ -107,7 +92,7 @@ const Login = () => {
           <div className="text-center">
             <div className="flex items-center justify-center space-x-2 mb-4">
               <Zap className="h-8 w-8 text-white" />
-              <span className="text-2xl font-bold text-white">FitFlow</span>
+              <span className="text-2xl font-bold text-white">PureBoost Energy</span>
             </div>
             <h2 className="text-3xl font-bold text-white">
               {isSignUp

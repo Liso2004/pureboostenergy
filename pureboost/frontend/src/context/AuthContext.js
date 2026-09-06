@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check if user is already logged in
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
     
     if (token && userData) {
@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true);
       } catch (error) {
         // If parsing fails, clear invalid data
-        localStorage.removeItem('authToken');
+        localStorage.removeItem('token');
         localStorage.removeItem('user');
       }
     }
@@ -70,8 +70,6 @@ export const AuthProvider = ({ children }) => {
     authService.logout();
     setUser(null);
     setIsAuthenticated(false);
-    localStorage.removeItem('user');
-    localStorage.removeItem('guestCartId'); // Clear guest cart on logout
   };
 
   const value = {

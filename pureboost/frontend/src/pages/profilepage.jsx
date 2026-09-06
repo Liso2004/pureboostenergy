@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useWishlist } from "../context/WishlistContext";
 import WishlistPage from "./WishlistPage";
+import api from "../services/api";
+import ProductImage from "../components/ui/ProductImage";
 
 const ProfilePage = () => {
   const [profile, setProfile] = useState(null);
@@ -16,17 +17,12 @@ const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState("Profile");
   const [filterStatus, setFilterStatus] = useState("");
 
-  const { wishlist } = useWishlist();
   const token = localStorage.getItem("token");
 
   // Fetch profile
   const fetchProfile = async () => {
     try {
-      const res = await fetch("http://localhost:5000/profile", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to fetch profile");
+      const { data } = await api.get("/profile");
       setProfile(data);
       setFormData(data);
     } catch (err) {
@@ -37,11 +33,7 @@ const ProfilePage = () => {
   // Fetch orders
   const fetchOrders = async () => {
     try {
-      const res = await fetch("http://localhost:5000/profile/orders", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to fetch orders");
+      const { data } = await api.get("/profile/orders");
       setOrders(data);
     } catch (err) {
       setError(err.message);
@@ -51,16 +43,7 @@ const ProfilePage = () => {
   // Update profile
   const handleUpdateProfile = async () => {
     try {
-      const res = await fetch("http://localhost:5000/profile/update", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Update failed");
+      const { data } = await api.put("/profile/update", formData);
       setProfile(data.user);
       setEditing(false);
     } catch (err) {
@@ -76,20 +59,11 @@ const ProfilePage = () => {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/profile/refund", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      const { data } = await api.post("/profile/refund", {
           order_id: selectedOrder,
           items: selectedItems,
           reason: refundReason,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Refund failed");
+        });
       setRefundMessage(data.message);
       setRefundReason("");
       setSelectedOrder("");
@@ -131,8 +105,8 @@ const ProfilePage = () => {
   const profileSection = (
     <div className="bg-white shadow rounded-lg p-4 mb-6">
       <div className="flex items-center space-x-4 mb-4">
-        <img
-          src={profile.avatar || "/default-avatar.png"}
+        <ProductImage
+          src={profile.avatar}
           alt="Profile"
           className="w-20 h-20 rounded-full object-cover"
         />
